@@ -117,7 +117,15 @@ fn start_game() {
                         GameOptions::LogoffForTheNight => {
                             player.days_survived += 1;
                             player.pips_left_today = 3;
-                            player.station.tick();
+                            match player.station.tick(player.days_survived) {
+                                StationTickMessage::LostStation => {game_over(&player); break}
+                                StationTickMessage::NothingToReport => {}
+                                StationTickMessage::ModulesBroke(broke) => {
+                                    for module in broke {
+                                        println!("{} {} overnight", module.module_type.to_string(), "BROKE".red())
+                                    }
+                                }
+                            }
                         }
                         GameOptions::DoScience => {
                             if player.pips_left_today > 0 {
@@ -159,4 +167,8 @@ fn start_game() {
             Err(_) => panic!("An error has occurred when selecting your choice")
         }
     }
+}
+
+fn game_over(player: &Player) {
+    println!("Game over! You earned {} science and survived {} days...well done!", player.science_done.to_string().yellow(), player.days_survived.to_string().yellow())
 }
